@@ -1,0 +1,25 @@
+View all open and closed incidents over a 30, 60, 90d period to see what type of incidents the SOC was getting hit with the most.
+
+let Last30Days = 
+    SecurityIncident
+    | summarize arg_max(LastModifiedTime, *) by IncidentName
+    | where Status in ("Active", "New", "Closed") and TimeGenerated >= ago(30d)
+    | summarize IncidentCount = count() by Title
+    | extend TimeFrame = "Last 30 Days";
+let Last60Days = 
+    SecurityIncident
+    | summarize arg_max(LastModifiedTime, *) by IncidentNumber
+    | where Status in ("Active", "New", "Closed") and TimeGenerated >= ago(60d) and TimeGenerated < ago(30d)
+    | summarize IncidentCount = count() by Title
+    | extend TimeFrame = "Last 60 Days";
+let Last90Days = 
+    SecurityIncident
+    | summarize arg_max(LastModifiedTime, *) by IncidentNumber
+    | where Status in ("Active", "New", "Closed") and TimeGenerated >= ago(90d) and TimeGenerated < ago(60d)
+    | summarize IncidentCount = count() by Title
+    | extend TimeFrame = "Last 90 Days";
+Last30Days
+| union Last60Days
+| union Last90Days
+| order by Title, TimeFrame asc
+//| render barchart 
